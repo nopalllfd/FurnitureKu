@@ -26,7 +26,7 @@ class AuthController extends Controller
      * @OA\Property(property="email", type="string", format="email", example="naufal@example.com"),
      * @OA\Property(property="password", type="string", format="password", example="password123"),
      * @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
-     * @OA\Property(property="role", type="string", example="seller", enum={"seller", "buyer"})
+     * @OA\Property(property="role", type="string", example="seller", enum={"admin", "buyer"})
      * )
      * ),
      * @OA\Response(
@@ -45,7 +45,7 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'string', 'in:buyer,seller'],
+            'role' => ['required', 'string', 'in:buyer,admin'],
         ]);
 
         $user = User::create([
