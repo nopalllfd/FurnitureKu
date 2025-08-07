@@ -54,7 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('products', ProductController::class)->except(['index', 'show']);
 
         // Mengelola Kategori (Hanya Admin)
-        Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);
+        Route::apiResource('categories', CategoriesController::class)->except(['index', 'show']);
         
         // Mengelola Semua Pesanan (Hanya Admin)
         Route::get('/orders', [OrderController::class, 'index']); // Admin melihat semua pesanan
