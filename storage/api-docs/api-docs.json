@@ -411,6 +411,105 @@
                 ]
             }
         },
+        "/api/my-orders": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Get my orders (buyer only)",
+                "description": "Retrieve a list of orders that belong to the authenticated buyer.",
+                "operationId": "87656984eb88571080fa1a099332a0ac",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Daftar pesanan Anda"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "order_code": {
+                                                        "type": "string",
+                                                        "example": "INV/20250807/ABC123"
+                                                    },
+                                                    "shipping_address": {
+                                                        "type": "string",
+                                                        "example": "Jl. Soekarno Hatta No.123"
+                                                    },
+                                                    "total_amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 250000
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "pending"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-08-07T09:12:34.000000Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-08-07T09:12:34.000000Z"
+                                                    },
+                                                    "product": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "Meja Makan"
+                                                                },
+                                                                "price": {
+                                                                    "type": "number",
+                                                                    "example": 50000
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/products": {
             "get": {
                 "tags": [

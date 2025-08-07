@@ -14,15 +14,15 @@ class Kernel extends HttpKernel
      * @var array<int, class-string|string>
      */
     protected $middleware = [
-        // \App\Http\Middleware\TrustHosts::class,
+        // Middleware global Laravel
         \App\Http\Middleware\TrustProxies::class,
-        \Fruitcake\Cors\HandleCors::class, // pastikan ini ada
+        \Illuminate\Http\Middleware\HandleCors::class, // ini boleh juga, tergantung versi Laravel
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        \Fruitcake\Cors\HandleCors::class,
     ];
+
 
     /**
      * The application's route middleware groups.

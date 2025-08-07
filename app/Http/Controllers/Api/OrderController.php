@@ -124,4 +124,61 @@ class OrderController extends Controller
             'total' => $order->total_amount,
         ], 201);
     }
+
+        /**
+     * @OA\Get(
+     *     path="/api/my-orders",
+     *     summary="Get my orders (buyer only)",
+     *     description="Retrieve a list of orders that belong to the authenticated buyer.",
+     *     tags={"Transactions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Daftar pesanan Anda"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="user_id", type="integer", example=5),
+     *                     @OA\Property(property="order_code", type="string", example="INV/20250807/ABC123"),
+     *                     @OA\Property(property="shipping_address", type="string", example="Jl. Soekarno Hatta No.123"),
+     *                     @OA\Property(property="total_amount", type="number", format="float", example=250000),
+     *                     @OA\Property(property="status", type="string", example="pending"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-08-07T09:12:34.000000Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-08-07T09:12:34.000000Z"),
+     *                     @OA\Property(
+     *                         property="product",
+     *                         type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="name", type="string", example="Meja Makan"),
+     *                             @OA\Property(property="price", type="number", example=50000)
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
+     */
+
+     // Buyer melihat pesanan miliknya sendiri
+    public function myOrders()
+    {
+        $orders = Order::where('user_id', Auth::id())->with('product')->get();
+
+        return response()->json([
+            'message' => 'Daftar pesanan Anda',
+            'data' => $orders,
+        ]);
+    }
 }
