@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Product;
 
+
 /**
  * @OA\Tag(
  *     name="Products",
@@ -37,28 +38,51 @@ use App\Models\Product;
 class ProductController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/api/products",
-     *     tags={"Products"},
-     *     summary="Get list of products",
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of products",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="List Produk"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Product")
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function index()
+ * @OA\Get(
+ *     path="/api/products",
+ *     tags={"Products"},
+ *     summary="Get list of products",
+ *     security={{"bearerAuth":{}}},
+ *
+ *     @OA\Parameter(
+ *         name="search",
+ *         in="query",
+ *         required=false,
+ *         description="Cari produk berdasarkan nama atau deskripsi",
+ *         @OA\Schema(type="string")
+ *     ),
+ *
+ *     @OA\Response(
+ *         response=200,
+ *         description="List of products",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="List Produk"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(ref="#/components/schemas/Product")
+ *             )
+ *         )
+ *     )
+ * )
+ */
+
+    public function index(Request $request)
     {
-        $products = Product::with('category')->get();
+        $query = Product::with('category');
+
+        // Tambahkan fitur search
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Ambil hasil
+        $products = $query->get();
 
         return response()->json([
             'message' => 'List Produk',
@@ -176,91 +200,91 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * @OA\Put(
-     *     path="/api/products/{id}",
-     *     tags={"Products"},
-     *     summary="Update product",
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the product",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 @OA\Property(property="name", type="string"),
-     *                 @OA\Property(property="category_id", type="integer"),
-     *                 @OA\Property(property="description", type="string"),
-     *                 @OA\Property(property="price", type="number"),
-     *                 @OA\Property(property="stock", type="integer"),
-     *                 @OA\Property(property="image", type="file"),
-     *                 @OA\Property(property="is_active", type="boolean")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Product updated successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="data", type="object")
-     *         )
-     *     )
-     * )
-     */
-    public function update(Request $request, $id)
-    {
-        $product = Product::find($id);
+ /**
+ * @OA\Post(
+ *     path="/api/products/{id}",
+ *     tags={"Products"},
+ *     summary="Update product",
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the product",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 required={"_method", "name", "category_id", "description", "price", "stock", "is_active"},
+ *                 @OA\Property(property="_method", type="string", example="PUT",),
+ *                 @OA\Property(property="name", type="string"),
+ *                 @OA\Property(property="category_id", type="integer"),
+ *                 @OA\Property(property="description", type="string"),
+ *                 @OA\Property(property="price", type="number", format="float"),
+ *                 @OA\Property(property="stock", type="integer"),
+ *                 @OA\Property(property="image", type="file"),
+ *                 @OA\Property(property="is_active", type="boolean")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Product updated successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string"),
+ *             @OA\Property(property="data", type="object")
+ *         )
+ *     )
+ * )
+ */
 
-        if (!$product) {
-            return response()->json([
-                'message' => 'Produk tidak ditemukan'
-            ], 404);
+
+
+public function update(Request $request, $id)
+{
+    $product = Product::findOrFail($id);
+
+    $request->merge([
+        'is_active' => filter_var($request->input('is_active'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
+    ]);
+
+    $validated = $request->validate([
+        'name' => 'required|string',
+        'category_id' => 'required|exists:categories,id',
+        'description' => 'nullable|string',
+        'price' => 'required|numeric',
+        'stock' => 'required|integer',
+        'is_active' => 'required|boolean',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+    ]);
+
+    if ($request->hasFile('image')) {
+        // Hapus gambar lama jika ada
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
         }
 
-        $request->merge([
-            'is_active' => filter_var($request->input('is_active'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
-        ]);
-
-        $request->validate([
-            'name' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id',
-            'description' => 'nullable|string',
-            'price' => 'nullable|numeric',
-            'stock' => 'nullable|numeric',
-            'image' => 'nullable|file|image|mimes:jpg,jpeg,png|max:2048',
-            'is_active' => 'nullable|boolean',
-        ]);
-
-        if ($request->hasFile('image')) {
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
-            }
-
-            $product->image = $request->file('image')->store('uploads/products', 'public');
-        }
-
-        $product->update([
-            'name' => $request->name ?? $product->name,
-            'slug' => $request->name ? Str::slug($request->name) : $product->slug,
-            'category_id' => $request->category_id ?? $product->category_id,
-            'description' => $request->description ?? $product->description,
-            'price' => $request->price ?? $product->price,
-            'stock' => $request->stock ?? $product->stock,
-            'is_active' => $request->is_active ?? $product->is_active,
-        ]);
-
-        return response()->json([
-            'message' => 'Product updated successfully',
-            'data' => $product
-        ]);
+        // Simpan gambar baru
+        $imagePath = $request->file('image')->store('uploads/products', 'public');
+        $validated['image'] = $imagePath;
     }
+
+    $validated['slug'] = Str::slug($request->name); // Tambahkan slug jika ingin diperbarui
+
+    $product->update($validated);
+
+    return response()->json([
+        'message' => 'Produk berhasil diperbarui',
+        'data' => $product
+    ]);
+}
+
+
+
+
 
     /**
      * @OA\Delete(

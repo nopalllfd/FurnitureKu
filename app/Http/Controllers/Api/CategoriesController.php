@@ -19,17 +19,33 @@ class CategoriesController extends Controller
      *     tags={"Categories"},
      *     summary="Get all categories",
      *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search category by name",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\Response(response=200, description="Success")
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Categories::all();
+        $query = Categories::query();
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        $categories = $query->get();
+
         return response()->json([
             'message' => 'Category list',
             'data' => $categories
         ]);
     }
+
 
     /**
      * @OA\Post(
