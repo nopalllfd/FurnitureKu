@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Categories;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Product;
+use App\Models\Category;
 
 /**
  * @OA\Tag(
@@ -56,15 +58,102 @@ class ProductController extends Controller
      *     )
      * )
      */
-    public function index()
+
+    public function index(Request $request)
     {
-        $products = Product::with('category')->get();
+        $query = Product::with('category');
+
+        // 🔍 Filter berdasarkan kategori ID (lama)
+        if ($request->has('category_id') && !empty($request->category_id)) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // ✅ Filter berdasarkan kategori slug (baru)
+        if ($request->has('category_slug') && !empty($request->category_slug)) {
+            $category = Categories::where('slug', $request->category_slug)->first();
+
+            if ($category) {
+                $query->where('category_id', $category->id);
+            } else {
+                return response()->json([
+                    'message' => 'Kategori tidak ditemukan',
+                    'data' => []
+                ], 404);
+            }
+        }
+
+        // 🔍 Fitur pencarian
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->get();
 
         return response()->json([
             'message' => 'List Produk',
             'data' => $products
         ]);
     }
+
+    /**
+ * @OA\Get(
+ *     path="/api/products/category/{slug}",
+ *     tags={"Products"},
+ *     summary="Get products by category slug",
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="slug",
+ *         in="path",
+ *         required=true,
+ *         description="Category slug",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="List of products filtered by category slug",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="List Produk by Category"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(ref="#/components/schemas/Product")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Category not found"
+ *     )
+ * )
+ */
+public function getByCategorySlug($slug)
+{
+    $category = Categories::where('slug', $slug)->first();
+
+    if (!$category) {
+        return response()->json([
+            'message' => 'Kategori tidak ditemukan',
+            'data' => []
+        ], 404);
+    }
+
+    $products = Product::with('category')
+        ->where('category_id', $category->id)
+        ->get();
+
+    return response()->json([
+        'message' => 'List Produk by Category',
+        'data' => $products
+    ]);
+}
+
+
+
 
     /**
      * @OA\Post(

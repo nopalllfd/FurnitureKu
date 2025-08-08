@@ -23,6 +23,7 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
 Route::get('/categories', [CategoriesController::class, 'index']);
 Route::get('/categories/{category}', [CategoriesController::class, 'show']);
+Route::get('/products/category/{slug}', [ProductController::class, 'getByCategorySlug']);
 
 
 /*
